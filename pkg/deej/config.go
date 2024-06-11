@@ -61,7 +61,7 @@ const (
 	configKeyCOMPort                  = "com_port"
 	configKeyBaudRate                 = "baud_rate"
 	configKeyNoiseReductionLevel      = "noise_reduction"
-    configKeyLanguage                 = "language"
+	configKeyLanguage                 = "language"
 
 	defaultCOMPort  = "COM4"
 	defaultBaudRate = 9600
@@ -97,6 +97,7 @@ func NewConfig(logger *zap.SugaredLogger, notifier Notifier, configPath string) 
 	userConfig.AddConfigPath(userConfigPath)
 
 	userConfig.SetDefault(configKeySliderMapping, map[string][]string{})
+	userConfig.SetDefault(configKeyIgnoreProcesses, make([]int, 0))
 	userConfig.SetDefault(configKeyInvertSliders, false)
 	userConfig.SetDefault(configKeyCOMPort, defaultCOMPort)
 	userConfig.SetDefault(configKeyBaudRate, defaultBaudRate)
