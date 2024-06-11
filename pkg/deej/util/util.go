@@ -124,3 +124,13 @@ func SignificantlyDifferent(old float32, new float32, noiseReductionLevel string
 func almostEquals(a float32, b float32) bool {
 	return math.Abs(float64(a-b)) < 0.000001
 }
+
+// checks if a slice contains a specific string
+func Contains(slice []string, target string) bool {
+	for _, str := range slice {
+		if str == target {
+			return true
+		}
+	}
+	return false
+}

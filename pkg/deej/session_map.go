@@ -112,6 +112,10 @@ func (m *sessionMap) getAndAddSessions() error {
 		m.add(session)
 
 		if !m.sessionMapped(session) {
+			if util.Contains(m.deej.config.IgnoreProcesses, session.Key()) {
+				m.logger.Debugw("Ignoring unmapped session", "session", session)
+				continue
+			}
 			m.logger.Debugw("Tracking unmapped session", "session", session)
 			m.unmappedSessions = append(m.unmappedSessions, session)
 		}

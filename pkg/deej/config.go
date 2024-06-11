@@ -18,6 +18,8 @@ import (
 type CanonicalConfig struct {
 	SliderMapping *sliderMap
 
+	IgnoreProcesses []string
+
 	ConnectionInfo struct {
 		COMPort  string
 		BaudRate int
@@ -49,6 +51,7 @@ const (
 	configType = "yaml"
 
 	configKeySliderMapping       = "slider_mapping"
+	configKeyIgnoreProcesses     = "ignore_processes"
 	configKeyInvertSliders       = "invert_sliders"
 	configKeyCOMPort             = "com_port"
 	configKeyBaudRate            = "baud_rate"
@@ -86,6 +89,7 @@ func NewConfig(logger *zap.SugaredLogger, notifier Notifier) (*CanonicalConfig, 
 	userConfig.AddConfigPath(userConfigPath)
 
 	userConfig.SetDefault(configKeySliderMapping, map[string][]string{})
+	userConfig.SetDefault(configKeyIgnoreProcesses, make([]int, 0))
 	userConfig.SetDefault(configKeyInvertSliders, false)
 	userConfig.SetDefault(configKeyCOMPort, defaultCOMPort)
 	userConfig.SetDefault(configKeyBaudRate, defaultBaudRate)
@@ -145,6 +149,7 @@ func (cc *CanonicalConfig) Load() error {
 	cc.logger.Info("Loaded config successfully")
 	cc.logger.Infow("Config values",
 		"sliderMapping", cc.SliderMapping,
+		"ignoreProcesses", cc.IgnoreProcesses,
 		"connectionInfo", cc.ConnectionInfo,
 		"invertSliders", cc.InvertSliders)
 
@@ -222,6 +227,8 @@ func (cc *CanonicalConfig) populateFromVipers() error {
 		cc.userConfig.GetStringMapStringSlice(configKeySliderMapping),
 		cc.internalConfig.GetStringMapStringSlice(configKeySliderMapping),
 	)
+
+	cc.IgnoreProcesses = cc.userConfig.GetStringSlice(configKeyIgnoreProcesses)
 
 	// get the rest of the config fields - viper saves us a lot of effort here
 	cc.ConnectionInfo.COMPort = cc.userConfig.GetString(configKeyCOMPort)

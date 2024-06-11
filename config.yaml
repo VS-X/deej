@@ -18,6 +18,11 @@ slider_mapping:
 # set this to true if you want the controls inverted (i.e. top is 0%, bottom is 100%)
 invert_sliders: false
 
+# ignored processes that won't be controlled 'deej.unmapped'
+# you can use this to prevent deej from controlling certain apps, like voicemeeter
+ignore_processes:
+  - voicemeeter.exe
+
 # settings for connecting to the arduino board
 com_port: COM4
 baud_rate: 9600
