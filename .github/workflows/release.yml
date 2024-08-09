@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows]
+        goarch: ["386", arm64, amd64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+    - uses: actions/checkout@v4
+    - uses: wangyoucao577/go-release-action@v1
+      if: matrix.goos == 'windows'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        project_path: ./pkg/deej/cmd
+        binary_name: "deej"
+        ldflags: "-H=windowsgui -s -w"
+        compress_assets: false
+    - uses: wangyoucao577/go-release-action@v1
+      if: matrix.goos == 'linux'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        project_path: ./pkg/deej/cmd
+        binary_name: "deej"
+        ldflags: "-s -w"
+        compress_assets: false
