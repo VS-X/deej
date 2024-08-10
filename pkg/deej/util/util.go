@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"syscall"
 
 	"go.uber.org/zap"
@@ -110,4 +111,41 @@ func SignificantlyDifferent(old float32, new float32, noiseReductionLevel string
 // a helper to make sure volume snaps correctly to 0 and 100, where appropriate
 func almostEquals(a float32, b float32) bool {
 	return math.Abs(float64(a-b)) < 0.000001
+}
+
+// checks if a slice contains a specific string
+func Contains(slice []string, target string) bool {
+	for _, str := range slice {
+		if str == target {
+			return true
+		}
+	}
+	return false
+}
+
+// limits a volume to a certain percentage of its current value
+func LimitVolume(value float32, limitPercentage int) float32 {
+	if value < 0.0 {
+		value = 0.0
+	} else if value > 1.0 {
+		value = 1.0
+	}
+	return (value / 100.0) * float32(limitPercentage)
+}
+
+// converts a map[string]string to a map[int]int
+func ConvertMapStringToInt(input map[string]string) (map[int]int, error) {
+	output := make(map[int]int)
+	for k, v := range input {
+		intKey, err := strconv.Atoi(k)
+		if err != nil {
+			return nil, fmt.Errorf("error converting key '%s' to int: %v", k, err)
+		}
+		intValue, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, fmt.Errorf("error converting value '%s' to int: %v", v, err)
+		}
+		output[intKey] = intValue
+	}
+	return output, nil
 }
