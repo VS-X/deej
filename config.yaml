@@ -15,6 +15,12 @@ slider_mapping:
     - rocketleague.exe
   4: discord.exe
 
+# (optional) set the volume limits for each slider (0-100%) 
+slider_volume_limit_mapping:
+  0: 100
+  1: 50
+  2: 30
+
 # set this to true if you want the controls inverted (i.e. top is 0%, bottom is 100%)
 invert_sliders: false
 

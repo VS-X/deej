@@ -226,6 +226,11 @@ func (m *sessionMap) handleSliderMoveEvent(event SliderMoveEvent) {
 		return
 	}
 
+	sliderVolumeLimit, ok := m.deej.config.SliderVolumeLimitMapping[event.SliderID]
+	if !ok {
+		sliderVolumeLimit = 100
+	}
+
 	targetFound := false
 	adjustmentFailed := false
 
@@ -252,7 +257,8 @@ func (m *sessionMap) handleSliderMoveEvent(event SliderMoveEvent) {
 			// iterate all matching sessions and adjust the volume of each one
 			for _, session := range sessions {
 				if session.GetVolume() != event.PercentValue {
-					if err := session.SetVolume(event.PercentValue); err != nil {
+					volume := util.LimitVolume(event.PercentValue, sliderVolumeLimit)
+					if err := session.SetVolume(volume); err != nil {
 						m.logger.Warnw("Failed to set target session volume", "error", err)
 						adjustmentFailed = true
 					}

@@ -16,9 +16,9 @@ import (
 // CanonicalConfig provides application-wide access to configuration fields,
 // as well as loading/file watching logic for deej's configuration file
 type CanonicalConfig struct {
-	SliderMapping *sliderMap
-
-	IgnoreProcesses []string
+	SliderMapping            *sliderMap
+	SliderVolumeLimitMapping map[int]int
+	IgnoreProcesses          []string
 
 	ConnectionInfo struct {
 		COMPort  string
@@ -50,12 +50,13 @@ const (
 
 	configType = "yaml"
 
-	configKeySliderMapping       = "slider_mapping"
-	configKeyIgnoreProcesses     = "ignore_processes"
-	configKeyInvertSliders       = "invert_sliders"
-	configKeyCOMPort             = "com_port"
-	configKeyBaudRate            = "baud_rate"
-	configKeyNoiseReductionLevel = "noise_reduction"
+	configKeySliderMapping            = "slider_mapping"
+	configKeySliderVolumeLimitMapping = "slider_volume_limit_mapping"
+	configKeyIgnoreProcesses          = "ignore_processes"
+	configKeyInvertSliders            = "invert_sliders"
+	configKeyCOMPort                  = "com_port"
+	configKeyBaudRate                 = "baud_rate"
+	configKeyNoiseReductionLevel      = "noise_reduction"
 
 	defaultCOMPort  = "COM4"
 	defaultBaudRate = 9600
@@ -149,6 +150,7 @@ func (cc *CanonicalConfig) Load() error {
 	cc.logger.Info("Loaded config successfully")
 	cc.logger.Infow("Config values",
 		"sliderMapping", cc.SliderMapping,
+		"sliderVolumeLimitMapping", cc.SliderVolumeLimitMapping,
 		"ignoreProcesses", cc.IgnoreProcesses,
 		"connectionInfo", cc.ConnectionInfo,
 		"invertSliders", cc.InvertSliders)
@@ -227,6 +229,14 @@ func (cc *CanonicalConfig) populateFromVipers() error {
 		cc.userConfig.GetStringMapStringSlice(configKeySliderMapping),
 		cc.internalConfig.GetStringMapStringSlice(configKeySliderMapping),
 	)
+
+	volumeLimitStringMap := cc.userConfig.GetStringMapString(configKeySliderVolumeLimitMapping)
+	convertedVolumeLimitIntMap, err := util.ConvertMapStringToInt(volumeLimitStringMap)
+	if err != nil {
+		fmt.Println("Error:", err)
+		cc.logger.Fatal("Could not parse volume limits. Are you sure you have used numbers?", err)
+	}
+	cc.SliderVolumeLimitMapping = convertedVolumeLimitIntMap
 
 	cc.IgnoreProcesses = cc.userConfig.GetStringSlice(configKeyIgnoreProcesses)
 
