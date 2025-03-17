@@ -123,9 +123,17 @@ func (sf *paSessionFinder) enumerateAndAddSessions(sessions *[]Session) error {
 	request := proto.GetSinkInputInfoList{}
 	reply := proto.GetSinkInputInfoListReply{}
 
+	requestDevices := proto.GetSinkInfoList{}
+	replyDevices := proto.GetSinkInfoListReply{}
+
 	if err := sf.client.Request(&request, &reply); err != nil {
 		sf.logger.Warnw("Failed to get sink input list", "error", err)
 		return fmt.Errorf("get sink input list: %w", err)
+	}
+
+	if err := sf.client.Request(&requestDevices, &replyDevices); err != nil {
+		sf.logger.Warnw("Failed to get sink list", "error", err)
+		return fmt.Errorf("get sink list: %w", err)
 	}
 
 	for _, info := range reply {
@@ -140,6 +148,15 @@ func (sf *paSessionFinder) enumerateAndAddSessions(sessions *[]Session) error {
 
 		// create the deej session object
 		newSession := newPASession(sf.sessionLogger, sf.client, info.SinkInputIndex, info.Channels, name.String())
+
+		// add it to our slice
+		*sessions = append(*sessions, newSession)
+
+	}
+
+	for _, info := range replyDevices {
+		// create the deej session object
+		newSession := newPASession(sf.sessionLogger, sf.client, info.SinkIndex, info.Channels, info.SinkName)
 
 		// add it to our slice
 		*sessions = append(*sessions, newSession)
