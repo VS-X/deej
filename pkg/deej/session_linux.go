@@ -23,6 +23,7 @@ type paSession struct {
 
 	sinkInputIndex    uint32
 	sinkInputChannels byte
+	isSink            bool // Flag to differentiate between SinkInput and Sink
 }
 
 type masterSession struct {
@@ -41,12 +42,14 @@ func newPASession(
 	sinkInputIndex uint32,
 	sinkInputChannels byte,
 	processName string,
+	isSink bool, // New parameter to indicate if it's a Sink
 ) *paSession {
 
 	s := &paSession{
 		client:            client,
 		sinkInputIndex:    sinkInputIndex,
 		sinkInputChannels: sinkInputChannels,
+		isSink:            isSink, // Set the flag
 	}
 
 	s.processName = processName
@@ -94,34 +97,66 @@ func newMasterSession(
 }
 
 func (s *paSession) GetVolume() float32 {
+	if s.isSink {
+		// Handle Sink
+		request := proto.GetSinkInfo{
+			SinkIndex: s.sinkInputIndex,
+		}
+		reply := proto.GetSinkInfoReply{}
+
+		if err := s.client.Request(&request, &reply); err != nil {
+			s.logger.Warnw("Failed to get Sink volume", "error", err)
+			return 0
+		}
+
+		return parseChannelVolumes(reply.ChannelVolumes)
+	}
+
+	// Handle SinkInput
 	request := proto.GetSinkInputInfo{
 		SinkInputIndex: s.sinkInputIndex,
 	}
 	reply := proto.GetSinkInputInfoReply{}
 
 	if err := s.client.Request(&request, &reply); err != nil {
-		s.logger.Warnw("Failed to get session volume", "error", err)
+		s.logger.Warnw("Failed to get SinkInput volume", "error", err)
+		return 0
 	}
 
-	level := parseChannelVolumes(reply.ChannelVolumes)
-
-	return level
+	return parseChannelVolumes(reply.ChannelVolumes)
 }
 
 func (s *paSession) SetVolume(v float32) error {
 	volumes := createChannelVolumes(s.sinkInputChannels, v)
+
+	if s.isSink {
+		// Handle Sink
+		request := proto.SetSinkVolume{
+			SinkIndex:      s.sinkInputIndex,
+			ChannelVolumes: volumes,
+		}
+
+		if err := s.client.Request(&request, nil); err != nil {
+			s.logger.Warnw("Failed to set Sink volume", "error", err)
+			return fmt.Errorf("adjust Sink volume: %w", err)
+		}
+
+		s.logger.Debugw("Adjusting Sink volume", "to", fmt.Sprintf("%.2f", v))
+		return nil
+	}
+
+	// Handle SinkInput
 	request := proto.SetSinkInputVolume{
 		SinkInputIndex: s.sinkInputIndex,
 		ChannelVolumes: volumes,
 	}
 
 	if err := s.client.Request(&request, nil); err != nil {
-		s.logger.Warnw("Failed to set session volume", "error", err)
-		return fmt.Errorf("adjust session volume: %w", err)
+		s.logger.Warnw("Failed to set SinkInput volume", "error", err)
+		return fmt.Errorf("adjust SinkInput volume: %w", err)
 	}
 
-	s.logger.Debugw("Adjusting session volume", "to", fmt.Sprintf("%.2f", v))
-
+	s.logger.Debugw("Adjusting SinkInput volume", "to", fmt.Sprintf("%.2f", v))
 	return nil
 }
 

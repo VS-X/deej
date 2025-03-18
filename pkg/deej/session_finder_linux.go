@@ -147,7 +147,7 @@ func (sf *paSessionFinder) enumerateAndAddSessions(sessions *[]Session) error {
 		}
 
 		// create the deej session object
-		newSession := newPASession(sf.sessionLogger, sf.client, info.SinkInputIndex, info.Channels, name.String())
+		newSession := newPASession(sf.sessionLogger, sf.client, info.SinkInputIndex, info.Channels, name.String(), false)
 
 		// add it to our slice
 		*sessions = append(*sessions, newSession)
@@ -156,7 +156,7 @@ func (sf *paSessionFinder) enumerateAndAddSessions(sessions *[]Session) error {
 
 	for _, info := range replyDevices {
 		// create the deej session object
-		newSession := newPASession(sf.sessionLogger, sf.client, info.SinkIndex, info.Channels, info.SinkName)
+		newSession := newPASession(sf.sessionLogger, sf.client, info.SinkIndex, info.Channels, info.SinkName, true)
 
 		// add it to our slice
 		*sessions = append(*sessions, newSession)
